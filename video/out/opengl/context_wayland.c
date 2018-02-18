@@ -51,9 +51,16 @@ static void resize(struct ra_ctx *ctx)
     wl->vo->dheight = height;
 }
 
+extern const struct wl_callback_listener frame_listener;
+
 static void wayland_egl_swap_buffers(struct ra_ctx *ctx)
 {
     struct priv *p = ctx->priv;
+    struct vo_wayland_state *wl = ctx->vo->wl;
+
+    wl->frame_callback = wl_surface_frame(wl->surface);
+    wl_callback_add_listener(wl->frame_callback, &frame_listener, wl);
+
     eglSwapBuffers(p->egl_display, p->egl_surface);
 }
 

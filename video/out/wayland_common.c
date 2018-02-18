@@ -756,8 +756,6 @@ static const struct wl_surface_listener surface_listener = {
     surface_handle_leave,
 };
 
-static const struct wl_callback_listener frame_listener;
-
 static void frame_callback(void *data, struct wl_callback *callback, uint32_t time)
 {
     struct vo_wayland_state *wl = data;
@@ -765,14 +763,12 @@ static void frame_callback(void *data, struct wl_callback *callback, uint32_t ti
     if (callback)
         wl_callback_destroy(callback);
 
-    wl->frame_callback = wl_surface_frame(wl->surface);
-    wl_callback_add_listener(wl->frame_callback, &frame_listener, wl);
 
     if (!vo_render_frame_external(wl->vo))
         wl_surface_commit(wl->surface);
 }
 
-static const struct wl_callback_listener frame_listener = {
+const struct wl_callback_listener frame_listener = {
     frame_callback,
 };
 

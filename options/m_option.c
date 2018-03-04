@@ -2534,7 +2534,7 @@ static int parse_rel_time(struct mp_log *log, const m_option_t *opt,
     if (param.len == 0)
         return M_OPT_MISSING_PARAM;
 
-    if (bstr_equals0(param, "none")) {
+    if (bstr_equals0(param, "none") || bstr_equals0(param, "no")) {
         t.type = REL_TIME_NONE;
         goto out;
     }
@@ -2594,7 +2594,41 @@ static char *print_rel_time(const m_option_t *opt, const void *val)
     case REL_TIME_PERCENT:
         return talloc_asprintf(NULL, "%g%%", t->pos);
     }
-    return talloc_strdup(NULL, "none");
+    return talloc_strdup(NULL, "no");
+}
+
+static char *pretty_print_rel_time(const m_option_t *opt, const void *val)
+{
+    const struct m_rel_time *t = val;
+    switch(t->type) {
+    case REL_TIME_ABSOLUTE:
+        return mp_format_time(t->pos, false);
+    }
+
+    return print_rel_time(opt, val);
+}
+
+static int rel_time_set(const m_option_t *opt, void *dst,
+                        struct mpv_node *src)
+{
+    struct m_rel_time *t = dst;
+    int rc = double_set(opt, &t->pos, src);
+    if (rc > 0)
+        t->type = REL_TIME_ABSOLUTE;
+    return rc;
+}
+
+static int rel_time_get(const m_option_t *opt, void *ta_parent,
+                        struct mpv_node *dst, void *src)
+{
+    struct m_rel_time *t = src;
+    if (t->type == REL_TIME_ABSOLUTE)
+        return double_get(opt, ta_parent, dst, &t->pos);
+
+    dst->format = MPV_FORMAT_STRING;
+    dst->u.string = print_rel_time(opt, t);
+    ta_set_parent(dst->u.string, ta_parent);
+    return 1;
 }
 
 const m_option_type_t m_option_type_rel_time = {
@@ -2602,7 +2636,10 @@ const m_option_type_t m_option_type_rel_time = {
     .size  = sizeof(struct m_rel_time),
     .parse = parse_rel_time,
     .print = print_rel_time,
+    .pretty_print = pretty_print_rel_time,
     .copy  = copy_opt,
+    .set = rel_time_set,
+    .get = rel_time_get,
 };
 
 

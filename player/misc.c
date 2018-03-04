@@ -108,11 +108,13 @@ double get_play_end_pts(struct MPContext *mpctx)
     // even though MP_NOPTS_VALUE is currently negative
     // it doesn't necessarily have to remain that way
     double ab_loop_start_time = get_ab_loop_start_time(mpctx);
-    if (mpctx->ab_loop_clip && opts->ab_loop[1] != MP_NOPTS_VALUE &&
-        (ab_loop_start_time == MP_NOPTS_VALUE || opts->ab_loop[1] > ab_loop_start_time))
+    double ab_loop_end_time = rel_time_to_abs(mpctx, opts->ab_loop[1]);
+    if (mpctx->ab_loop_clip && ab_loop_end_time != MP_NOPTS_VALUE &&
+        (ab_loop_start_time == MP_NOPTS_VALUE ||
+         ab_loop_end_time > ab_loop_start_time))
     {
-        if (end == MP_NOPTS_VALUE || end > opts->ab_loop[1])
-            end = opts->ab_loop[1];
+        if (end == MP_NOPTS_VALUE || end > ab_loop_end_time)
+            end = ab_loop_end_time;
     }
     return end;
 }
@@ -161,10 +163,8 @@ double get_play_start_pts(struct MPContext *mpctx)
 double get_ab_loop_start_time(struct MPContext *mpctx)
 {
     struct MPOpts *opts = mpctx->opts;
-    double ab_loop_start_time;
-    if (opts->ab_loop[0] != MP_NOPTS_VALUE) {
-        ab_loop_start_time = opts->ab_loop[0];
-    } else {
+    double ab_loop_start_time = rel_time_to_abs(mpctx, opts->ab_loop[0]);
+    if (ab_loop_start_time == MP_NOPTS_VALUE) {
         /*
          * There is no check for MP_NOPTS_VALUE here
          * because that's exactly what we want to return

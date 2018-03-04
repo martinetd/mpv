@@ -135,6 +135,7 @@ Interface changes
       consequences for scripts, client API, or when using file-local options)
     - remove deprecated ao/vo auto profiles. Consider using scripts like
       auto-profiles.lua instead.
+    - --ab-loop-* options now use relative time, like --start.
  --- mpv 0.28.0 ---
     - rename --hwdec=mediacodec option to mediacodec-copy, to reflect
       conventions followed by other hardware video decoding APIs

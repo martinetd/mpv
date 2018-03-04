@@ -3447,18 +3447,20 @@ static int mp_property_ab_loop(void *ctx, struct m_property *prop,
     struct MPContext *mpctx = ctx;
     struct MPOpts *opts = mpctx->opts;
     if (action == M_PROPERTY_KEY_ACTION) {
-        double val;
+        struct m_rel_time val;
         if (mp_property_generic_option(mpctx, prop, M_PROPERTY_GET, &val) < 1)
             return M_PROPERTY_ERROR;
 
-        return property_time(action, arg, val);
+        double time = rel_time_to_abs(mpctx, val);
+        return property_time(action, arg, time);
     }
     int r = mp_property_generic_option(mpctx, prop, action, arg);
     if (r > 0 && action == M_PROPERTY_SET) {
-        mpctx->ab_loop_clip = mpctx->playback_pts < opts->ab_loop[1];
+        double ab_loop_end_time = rel_time_to_abs(mpctx, opts->ab_loop[1]);
+        mpctx->ab_loop_clip = mpctx->playback_pts < ab_loop_end_time;
         if (strcmp(prop->name, "ab-loop-b") == 0) {
-            if (opts->ab_loop[1] != MP_NOPTS_VALUE &&
-                mpctx->playback_pts <= opts->ab_loop[1])
+            if (ab_loop_end_time != MP_NOPTS_VALUE &&
+                mpctx->playback_pts <= ab_loop_end_time)
                 mpctx->ab_loop_clip = true;
         }
         // Update if visible
@@ -5575,15 +5577,19 @@ static void cmd_ab_loop(void *p)
     int osd_duration = mpctx->opts->osd_duration;
     int osdl = cmd->msg_osd ? 1 : OSD_LEVEL_INVISIBLE;
 
-    double now = get_current_time(mpctx);
-    if (mpctx->opts->ab_loop[0] == MP_NOPTS_VALUE) {
+    struct m_rel_time now = {
+        .pos = get_current_time(mpctx),
+        .type = REL_TIME_ABSOLUTE,
+    };
+    if (rel_time_to_abs(mpctx, mpctx->opts->ab_loop[0]) == MP_NOPTS_VALUE) {
         mp_property_do("ab-loop-a", M_PROPERTY_SET, &now, mpctx);
         show_property_osd(mpctx, "ab-loop-a", cmd->on_osd);
-    } else if (mpctx->opts->ab_loop[1] == MP_NOPTS_VALUE) {
+    } else if (rel_time_to_abs(mpctx, mpctx->opts->ab_loop[1]) ==
+        MP_NOPTS_VALUE) {
         mp_property_do("ab-loop-b", M_PROPERTY_SET, &now, mpctx);
         show_property_osd(mpctx, "ab-loop-b", cmd->on_osd);
     } else {
-        now = MP_NOPTS_VALUE;
+        now.type = REL_TIME_NONE;
         mp_property_do("ab-loop-a", M_PROPERTY_SET, &now, mpctx);
         mp_property_do("ab-loop-b", M_PROPERTY_SET, &now, mpctx);
         set_osd_msg(mpctx, osdl, osd_duration, "Clear A-B loop");

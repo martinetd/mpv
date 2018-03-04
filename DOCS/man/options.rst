@@ -109,7 +109,8 @@ Playback Control
 
     ``#c`` seeks to chapter number c. (Chapters start from 1.)
 
-    ``none`` resets any previously set option (useful for libmpv).
+    ``no`` resets any previously set option (useful for libmpv).
+    ``none`` is a deprecated alias for ``no``.
 
     .. admonition:: Examples
 
@@ -165,7 +166,7 @@ Playback Control
     Specify which chapter to start playing at. Optionally specify which
     chapter to end playing at.
 
-    See also: ``--start``.
+    ``--chapter`` is deprecated in favor of ``--start=#A [--end=#B+1]`` syntax.
 
 ``--playlist-start=<auto|index>``
     Set which file on the internal playlist to start playback with. The index
@@ -322,8 +323,10 @@ Playback Control
     ``--loop`` is an alias for this option.
 
 ``--ab-loop-a=<time>``, ``--ab-loop-b=<time>``
-    Set loop points. If playback passes the ``b`` timestamp, it will seek to
-    the ``a`` timestamp. Seeking past the ``b`` point doesn't loop (this is
+    Set loop points. See ``--start`` for examples of valid timestamps.
+
+    If playback passes the ``b`` timestamp, it will seek to the ``a``
+    timestamp. Seeking past the ``b`` point doesn't loop (this is
     intentional).
 
     If both options are set to ``no`` or unset, looping is disabled.

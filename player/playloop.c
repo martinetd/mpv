@@ -393,7 +393,8 @@ static void mp_seek(MPContext *mpctx, struct seek_params seek)
     mp_notify(mpctx, MPV_EVENT_SEEK, NULL);
     mp_notify(mpctx, MPV_EVENT_TICK, NULL);
 
-    mpctx->ab_loop_clip = mpctx->last_seek_pts < opts->ab_loop[1];
+    mpctx->ab_loop_clip =
+        mpctx->last_seek_pts < rel_time_to_abs(mpctx, opts->ab_loop[1]);
 
     mpctx->current_seek = seek;
 }
@@ -781,7 +782,8 @@ static void handle_loop_file(struct MPContext *mpctx)
     struct MPOpts *opts = mpctx->opts;
 
     if (mpctx->stop_play == AT_END_OF_FILE &&
-        (opts->ab_loop[0] != MP_NOPTS_VALUE || opts->ab_loop[1] != MP_NOPTS_VALUE))
+        (rel_time_to_abs(mpctx, opts->ab_loop[0]) != MP_NOPTS_VALUE ||
+         rel_time_to_abs(mpctx, opts->ab_loop[1]) != MP_NOPTS_VALUE))
     {
         // Assumes execute_queued_seek() happens before next audio/video is
         // attempted to be decoded or filtered.
@@ -1043,7 +1045,8 @@ static void handle_playback_restart(struct MPContext *mpctx)
         }
         mpctx->playing_msg_shown = true;
         mp_wakeup_core(mpctx);
-        mpctx->ab_loop_clip = mpctx->playback_pts < opts->ab_loop[1];
+        mpctx->ab_loop_clip =
+            mpctx->playback_pts < rel_time_to_abs(mpctx, opts->ab_loop[1]);
         MP_VERBOSE(mpctx, "playback restart complete\n");
     }
 }

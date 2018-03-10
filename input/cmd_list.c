@@ -47,9 +47,9 @@
 #define ARG_FLOAT               OPT_FLOAT(ARG(f), 0)
 #define ARG_DOUBLE              OPT_DOUBLE(ARG(d), 0)
 #define ARG_STRING              OPT_STRING(ARG(s), 0)
+#define ARG_REL_TIME            OPT_REL_TIME(ARG(t), 0)
 #define ARG_CHOICE(c)           OPT_CHOICE(ARG(i), 0, c)
 #define ARG_CHOICE_OR_INT(...)  OPT_CHOICE_OR_INT(ARG(i), 0, __VA_ARGS__)
-#define ARG_TIME                OPT_TIME(ARG(d), 0)
 #define OARG_DOUBLE(def)        OPT_DOUBLE(ARG(d), 0, OPTDEF_DOUBLE(def))
 #define OARG_INT(def)           OPT_INT(ARG(i), 0, OPTDEF_INT(def))
 #define OARG_CHOICE(def, c)     OPT_CHOICE(ARG(i), 0, c, OPTDEF_INT(def))
@@ -62,7 +62,7 @@ const struct mp_cmd_def mp_cmds[] = {
   { MP_CMD_IGNORE, "ignore", },
 
   { MP_CMD_SEEK, "seek", {
-      ARG_TIME,
+      ARG_REL_TIME,
       OARG_FLAGS(4|0, ({"relative", 4|0}, {"-", 4|0},
                        {"absolute-percent", 4|1},
                        {"absolute", 4|2},

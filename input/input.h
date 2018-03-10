@@ -68,6 +68,7 @@ struct mp_cmd_arg {
         char *s;
         char **str_list;
         void *p;
+        struct m_rel_time t;
     } v;
 };
 

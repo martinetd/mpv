@@ -4776,7 +4776,6 @@ static bool check_property_scalable(char *property, struct MPContext *mpctx)
     // These properties are backed by a floating-point number
     return prop.type == &m_option_type_float ||
            prop.type == &m_option_type_double ||
-           prop.type == &m_option_type_time ||
            prop.type == &m_option_type_aspect;
 }
 

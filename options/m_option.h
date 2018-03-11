@@ -49,7 +49,6 @@ extern const m_option_type_t m_option_type_string;
 extern const m_option_type_t m_option_type_string_list;
 extern const m_option_type_t m_option_type_string_append_list;
 extern const m_option_type_t m_option_type_keyvalue_list;
-extern const m_option_type_t m_option_type_time;
 extern const m_option_type_t m_option_type_rel_time;
 extern const m_option_type_t m_option_type_choice;
 extern const m_option_type_t m_option_type_flags;
@@ -222,7 +221,6 @@ struct m_sub_options {
 #define CONF_TYPE_FOURCC        (&m_option_type_fourcc)
 #define CONF_TYPE_AFMT          (&m_option_type_afmt)
 #define CONF_TYPE_OBJ_SETTINGS_LIST (&m_option_type_obj_settings_list)
-#define CONF_TYPE_TIME          (&m_option_type_time)
 #define CONF_TYPE_REL_TIME      (&m_option_type_rel_time)
 #define CONF_TYPE_CHOICE        (&m_option_type_choice)
 #define CONF_TYPE_INT_PAIR      (&m_option_type_intpair)
@@ -671,9 +669,6 @@ extern const char m_option_path_separator;
                 M_CHOICES(choices), __VA_ARGS__)
 #define OPT_CHOICE_OR_INT(...) \
     OPT_CHOICE_OR_INT_(__VA_ARGS__, .type = &m_option_type_choice)
-
-#define OPT_TIME(...) \
-    OPT_GENERAL(double, __VA_ARGS__, .type = &m_option_type_time)
 
 #define OPT_REL_TIME(...) \
     OPT_GENERAL(struct m_rel_time, __VA_ARGS__, .type = &m_option_type_rel_time)

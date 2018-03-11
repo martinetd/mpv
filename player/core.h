@@ -523,6 +523,7 @@ void issue_refresh_seek(struct MPContext *mpctx, enum seek_precision min_prec);
 
 // misc.c
 double rel_time_to_abs(struct MPContext *mpctx, struct m_rel_time t);
+struct m_rel_time abs_to_rel_time(double abs);
 double get_play_end_pts(struct MPContext *mpctx);
 double get_play_start_pts(struct MPContext *mpctx);
 double get_ab_loop_start_time(struct MPContext *mpctx);

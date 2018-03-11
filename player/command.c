@@ -599,15 +599,15 @@ static int mp_property_stream_end(void *ctx, struct m_property *prop,
 
 // Does some magic to handle "<name>/full" as time formatted with milliseconds.
 // Assumes prop is the type of the actual property.
-static int property_time(int action, void *arg, double time)
+static int property_time(int action, void *arg, struct m_rel_time time)
 {
-    if (time == MP_NOPTS_VALUE)
+    if (time.type == REL_TIME_NONE)
         return M_PROPERTY_UNAVAILABLE;
 
-    const struct m_option time_type = {.type = CONF_TYPE_TIME};
+    const struct m_option time_type = {.type = CONF_TYPE_REL_TIME};
     switch (action) {
     case M_PROPERTY_GET:
-        *(double *)arg = time;
+        *(struct m_rel_time *)arg = time;
         return M_PROPERTY_OK;
     case M_PROPERTY_GET_TYPE:
         *(struct m_option *)arg = time_type;
@@ -620,10 +620,12 @@ static int property_time(int action, void *arg, double time)
 
         switch (ka->action) {
         case M_PROPERTY_GET:
-            *(double *)ka->arg = time;
+            *(struct m_rel_time *)ka->arg = time;
             return M_PROPERTY_OK;
         case M_PROPERTY_PRINT:
-            *(char **)ka->arg = mp_format_time(time, true);
+            if (time.type != REL_TIME_ABSOLUTE)
+                return M_PROPERTY_NOT_IMPLEMENTED;
+            *(char **)ka->arg = mp_format_time(time.pos, true);
             return M_PROPERTY_OK;
         case M_PROPERTY_GET_TYPE:
             *(struct m_option *)ka->arg = time_type;
@@ -643,7 +645,7 @@ static int mp_property_duration(void *ctx, struct m_property *prop,
     if (len < 0)
         return M_PROPERTY_UNAVAILABLE;
 
-    return property_time(action, arg, len);
+    return property_time(action, arg, abs_to_rel_time(len));
 }
 
 static int mp_property_avsync(void *ctx, struct m_property *prop,
@@ -778,7 +780,7 @@ static int mp_property_time_start(void *ctx, struct m_property *prop,
                                   int action, void *arg)
 {
     // minor backwards-compat.
-    return property_time(action, arg, 0);
+    return property_time(action, arg, abs_to_rel_time(0));
 }
 
 /// Current position in seconds (RW)
@@ -793,7 +795,8 @@ static int mp_property_time_pos(void *ctx, struct m_property *prop,
         queue_seek(mpctx, MPSEEK_ABSOLUTE, *(double *)arg, MPSEEK_DEFAULT, 0);
         return M_PROPERTY_OK;
     }
-    return property_time(action, arg, get_current_time(mpctx));
+    return property_time(action, arg,
+                         abs_to_rel_time(get_current_time(mpctx)));
 }
 
 /// Current audio pts in seconds (R)
@@ -805,7 +808,8 @@ static int mp_property_audio_pts(void *ctx, struct m_property *prop,
         mpctx->audio_status >= STATUS_EOF)
         return M_PROPERTY_UNAVAILABLE;
 
-    return property_time(action, arg, playing_audio_pts(mpctx));
+    return property_time(action, arg,
+                         abs_to_rel_time(playing_audio_pts(mpctx)));
 }
 
 static bool time_remaining(MPContext *mpctx, double *remaining)
@@ -828,7 +832,7 @@ static int mp_property_remaining(void *ctx, struct m_property *prop,
     if (!time_remaining(ctx, &remaining))
         return M_PROPERTY_UNAVAILABLE;
 
-    return property_time(action, arg, remaining);
+    return property_time(action, arg, abs_to_rel_time(remaining));
 }
 
 static int mp_property_playtime_remaining(void *ctx, struct m_property *prop,
@@ -840,7 +844,7 @@ static int mp_property_playtime_remaining(void *ctx, struct m_property *prop,
         return M_PROPERTY_UNAVAILABLE;
 
     double speed = mpctx->video_speed;
-    return property_time(action, arg, remaining / speed);
+    return property_time(action, arg, abs_to_rel_time(remaining / speed));
 }
 
 static int mp_property_playback_time(void *ctx, struct m_property *prop,
@@ -854,7 +858,8 @@ static int mp_property_playback_time(void *ctx, struct m_property *prop,
         queue_seek(mpctx, MPSEEK_ABSOLUTE, *(double *)arg, MPSEEK_DEFAULT, 0);
         return M_PROPERTY_OK;
     }
-    return property_time(action, arg, get_playback_time(mpctx));
+    return property_time(action, arg,
+                         abs_to_rel_time(get_playback_time(mpctx)));
 }
 
 /// Current BD/DVD title (RW)
@@ -975,7 +980,9 @@ static int get_chapter_entry(int item, int action, void *arg, void *ctx)
     double time = chapter_start_time(mpctx, item);
     struct m_sub_property props[] = {
         {"title",       SUB_PROP_STR(name)},
-        {"time",        {.type = CONF_TYPE_TIME}, {.time = time}},
+        {"time",        {.type = CONF_TYPE_REL_TIME},
+                        {.rel_time = {.type = REL_TIME_ABSOLUTE,
+                                      .pos = time}}},
         {0}
     };
 
@@ -1197,7 +1204,9 @@ static int get_disc_title_entry(int item, int action, void *arg, void *ctx)
 
     struct m_sub_property props[] = {
         {"id",          SUB_PROP_INT(item)},
-        {"length",      {.type = CONF_TYPE_TIME}, {.time = len},
+        {"length",      {.type = CONF_TYPE_REL_TIME},
+                        {.rel_time = {.type = REL_TIME_ABSOLUTE,
+                                      .pos = len}},
                         .unavailable = len < 0},
         {0}
     };
@@ -3415,8 +3424,7 @@ static int mp_property_ab_loop(void *ctx, struct m_property *prop,
         if (mp_property_generic_option(mpctx, prop, M_PROPERTY_GET, &val) < 1)
             return M_PROPERTY_ERROR;
 
-        double time = rel_time_to_abs(mpctx, val);
-        return property_time(action, arg, time);
+        return property_time(action, arg, val);
     }
     int r = mp_property_generic_option(mpctx, prop, action, arg);
     if (r > 0 && action == M_PROPERTY_SET) {

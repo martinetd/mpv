@@ -223,6 +223,7 @@ struct m_sub_options {
 #define CONF_TYPE_AFMT          (&m_option_type_afmt)
 #define CONF_TYPE_OBJ_SETTINGS_LIST (&m_option_type_obj_settings_list)
 #define CONF_TYPE_TIME          (&m_option_type_time)
+#define CONF_TYPE_REL_TIME      (&m_option_type_rel_time)
 #define CONF_TYPE_CHOICE        (&m_option_type_choice)
 #define CONF_TYPE_INT_PAIR      (&m_option_type_intpair)
 #define CONF_TYPE_NODE          (&m_option_type_node)

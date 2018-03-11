@@ -85,6 +85,15 @@ double rel_time_to_abs(struct MPContext *mpctx, struct m_rel_time t)
     return MP_NOPTS_VALUE;
 }
 
+struct m_rel_time abs_to_rel_time(double abs) {
+	struct m_rel_time time = { 0 };
+	if (abs != MP_NOPTS_VALUE) {
+		time.type = REL_TIME_ABSOLUTE;
+		time.pos = abs;
+	}
+	return time;
+}
+
 double get_play_end_pts(struct MPContext *mpctx)
 {
     struct MPOpts *opts = mpctx->opts;
